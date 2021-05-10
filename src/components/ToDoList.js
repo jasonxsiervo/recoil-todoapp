@@ -1,9 +1,12 @@
 // import { fontSizeState, fontSizeLabelState } from './recoil/FontSize';
-import { toDoListState } from './recoil/List';
+import { toDoListState } from './recoil/atom/List';
 import { useRecoilState } from 'recoil';
 import ToDoItem from './ToDoItem';
 import ToDoItemCreator from './ToDoItemCreator';
 import { useEffect } from 'react';
+import { filteredToDoListState } from './recoil/selectors/FilteredToDo';
+import ToDoListFilters from './ToDoListFilters';
+import ToDoListStats from './ToDoListStats';
 
 function ToDoList() {
 
@@ -15,7 +18,7 @@ function ToDoList() {
 
     // }, [fontSize, setFontSize]);
 
-    const toDoList = useRecoilState(toDoListState);
+    const toDoList = useRecoilState(filteredToDoListState);
     
     useEffect(() => {
         console.log('toDoList; ', toDoList[0])
@@ -32,6 +35,8 @@ function ToDoList() {
             </button> */}
 
             <ToDoItemCreator />
+            <ToDoListFilters />
+            <ToDoListStats />
 
             {
              toDoList[0].map((item) => (
