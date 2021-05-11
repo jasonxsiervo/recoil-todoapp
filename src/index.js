@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil'
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorFallback from './components/ErrorFallback';
 
 ReactDOM.render(
   <React.StrictMode>
     <RecoilRoot>
-      <App />
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <App />
+        </Suspense>
+      </ErrorBoundary>
     </RecoilRoot>
   </React.StrictMode>,
   document.getElementById('root')
