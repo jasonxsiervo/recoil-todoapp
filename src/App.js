@@ -1,13 +1,12 @@
 import './App.css';
-import ToDoList from './components/ToDoList';
-import MainPage from './MainPage';
+import MainPage from './components/MainPage';
 import { Provider, defaultTheme } from '@adobe/react-spectrum';
 
 function App() {
   return (
     <Provider colorScheme="dark" theme={defaultTheme}>
       <div className="App">
-        <ToDoList />
+        <MainPage />
       </div>
     </Provider>
   );
