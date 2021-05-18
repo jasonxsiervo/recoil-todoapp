@@ -1,26 +1,37 @@
 import React, { useCallback, useEffect } from 'react';
-import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import axios from 'axios';
+import { Grid, View, Button } from '@adobe/react-spectrum';
+import { 
+    useRecoilState, 
+    useRecoilValue, 
+    useRecoilValueLoadable, 
+    useResetRecoilState, 
+    useSetRecoilState,
+    useRecoilCallback,
+} from 'recoil';
 import styled from 'styled-components';
 import { fontSizeState, fontSizeLabelState } from './recoil/atom/FontSize';
 import { currentUserIDState, userList, userListQuery } from './recoil/atom/User';
+import { Fahrenheit, getCelsius } from './recoil/atom/Temperature';
 import { filteredToDoListState } from './recoil/selectors/FilteredToDo';
 import ToDoListFilters from './ToDoListFilters';
 import ToDoListStats from './ToDoListStats';
 import ToDoItem from './ToDoItem';
 import ToDoItemCreator from './ToDoItemCreator';
-import axios from 'axios';
+
 import User from './User';
+import MainPage from '../MainPage';
 
 const ToDoListContainer = styled.div`
-    background: yellow;
+    background: transparent;
 `;
 
 const FontSizeContainer = styled.div`
-    background: blue;
+    background: transparent;
 `;
 
 const UserListContainer = styled.div`
-    background: red;
+    background: transparent;
 `;
 
 
@@ -30,14 +41,24 @@ function ToDoList() {
     const fontSizeLabel = useRecoilValue(fontSizeLabelState);
 
     const handleOnClick = useCallback(() => {
-        setFontSize(fontSize => fontSize + 1);
+        setFontSize(fontSize => {
+            if(fontSize > 38) {
+                return 20
+            } else {
+                return fontSize + 1
+            }
+        });
+    }, [setFontSize]);
+
+    const resetSize = useCallback(() => {
+        setFontSize(20);
     }, [setFontSize]);
 
     const toDoList = useRecoilState(filteredToDoListState);
 
-    const users = useRecoilValue(userList);
-    const setListOfUsers = useSetRecoilState(userList);
+    const usersLoadable = useRecoilValueLoadable(userList);
     const setCurrentUserID = useSetRecoilState(currentUserIDState);
+    const setListOfUsers = useSetRecoilState(userList);
     const currentUser = useRecoilValue(userListQuery);
 
     useEffect(() => {
@@ -51,10 +72,64 @@ function ToDoList() {
         fetchData();
     }, [setListOfUsers]);
 
+    const reloadList = useRecoilCallback(({snapshot}) => async () => {
+        return await snapshot.getPromise(userList);
+    })
+
+    const [ fahrenheit, setFahrenheit ] = useRecoilState(Fahrenheit);
+    const [ celsius, setCelsius ] = useRecoilState(getCelsius);
+    const resetValues = useResetRecoilState(Fahrenheit);
+
+    const addTenF = () => {
+        console.log('addTenF')
+        setFahrenheit(fahrenheit + 10);
+    }
+
+    const addTenC = () => {
+        console.log('addTenC')
+        setCelsius(celsius + 10);
+    }
+
+
     return (
-        <>
-            <ToDoListContainer>
-                <h1>To-do List</h1>
+        <Grid
+            areas={['header  header', 'sidebar content', 'footer  footer']}
+            columns={['1fr', '3fr']}
+            rows={['size-1000', 'auto', 'size-1000']}
+            height={["size-6000", "size-6000", "size-6000"]}
+            gap="size-100"
+        >
+            
+            <View backgroundColor="gray-200" gridArea="header">
+                <FontSize 
+                    fontSize={fontSize} 
+                    fontSizeLabel={fontSizeLabel} 
+                    handleOnClick={handleOnClick} 
+                    resetSize={resetSize}
+                />    
+            </View>
+
+            <View backgroundColor="gray-200" gridArea="sidebar">
+                <Grid
+                    columns={['1fr']}
+                    rows={['1fr', '1fr']}
+                    gap="size-100"
+                    margin="size-100"
+                >
+                    <Button variant="secondary" isQuiet>
+                        To Do List
+                    </Button>
+                    <Button variant="secondary" isQuiet>
+                        Users
+                    </Button>
+                    <Button variant="secondary" isQuiet>
+                        Fahrenheit/Celsius
+                    </Button>
+                </Grid>
+            </View>
+
+            <View backgroundColor="gray-200" gridArea="content">
+                {/* <h1>To-do List</h1>
 
                 <ToDoItemCreator />
                 <ToDoListFilters />
@@ -62,51 +137,108 @@ function ToDoList() {
 
                 {
                     toDoList[0].map((item) => (
-                        <ToDoItem key={item.id} item={item} />
+                    <ToDoItem key={item.id} item={item} />
                     ))
-                }
-            </ToDoListContainer>
+                } */}
 
-            <FontSizeContainer>
-                <FontSize 
-                    fontSize={fontSize} 
-                    fontSizeLabel={fontSizeLabel} 
-                    handleOnClick={handleOnClick} 
-                />
-            </FontSizeContainer>
+                {/* <h1>Temperature</h1>
 
-            <UserListContainer>
-                <h1>Welcome, {currentUser}</h1>
-                {
-                    users.length !== 0 ?
-                    users.map((user) => (
-                        <User 
-                            key={user.id} 
-                            userInfo={user} 
-                            handleUserClick={() => setCurrentUserID(user.id)}
-                        />
-                    ))
-                    :
-                    <p>Loading...</p>
-                }
-            </UserListContainer>
+                <h2>{fahrenheit}°F is {celsius}°C</h2>
+
+                <Button variant="secondary" onPress={addTenC}>
+                    Add 10°C
+                </Button>
+                <Button variant="secondary" onPress={addTenF}>
+                    Add 10°F
+                </Button>
+                <Button variant="secondary" onPress={resetValues}>
+                    Reset
+                </Button> */}
+
+                <h1>{currentUser.length > 0 ? <h1>Welcome, {currentUser}</h1> : <h1>Welcome!</h1>}</h1>
+                <Button variant="secondary" onPress={reloadList}>
+                    🔃
+                </Button>
+                
+                <UsersInfo usersLoadable={usersLoadable} setCurrentUserID={setCurrentUserID}/>
+            </View>
+
+
+            <View backgroundColor="gray-200" gridArea="footer" />
+        </Grid>
+        // <>
+        //     <ToDoListContainer>
+        //         <h1>To-do List</h1>
+
+        //         <ToDoItemCreator />
+        //         <ToDoListFilters />
+        //         <ToDoListStats />
+
+        //         {
+        //             toDoList[0].map((item) => (
+        //                 <ToDoItem key={item.id} item={item} />
+        //             ))
+        //         }
+        //     </ToDoListContainer>
+
+        //     <FontSizeContainer>
+        //         <FontSize 
+        //             fontSize={fontSize} 
+        //             fontSizeLabel={fontSizeLabel} 
+        //             handleOnClick={handleOnClick} 
+        //             resetSize={resetSize}
+        //         />
+        //     </FontSizeContainer>
+
+        //     <UserListContainer>
+        //         <h1>{currentUser.length > 0 ? <h1>Welcome, {currentUser}</h1> : <h1>Welcome!</h1>}</h1>
+        //         {
+        //             users.length !== 0 ?
+        //             users.map((user) => (
+        //                 <User 
+        //                     key={user.id} 
+        //                     userInfo={user} 
+        //                     handleUserClick={() => setCurrentUserID(user.id)}
+        //                 />
+        //             ))
+        //             :
+        //             <p>Loading...</p>
+        //         }
+        //     </UserListContainer>
             
-        </>
+        // </>
     );
 }
 
-const FontSize = ({ fontSize, fontSizeLabel, handleOnClick }) => {
+const FontSize = ({ fontSize, fontSizeLabel, handleOnClick, resetSize }) => {
     return (
-        <>
-            <h1 style={{fontSize}}>To Do List component</h1>
-            <p>Current i size is {fontSizeLabel}</p>
+        <FontSizeContainer>
+            <h1 style={{fontSize, cursor: 'pointer', margin: 0}} onClick={handleOnClick}>To Do List component</h1>
+            <p style={{ margin: 0}} onClick={resetSize}>({fontSizeLabel})</p>
 
-            <button onClick={handleOnClick}>
+            {/* <button onClick={handleOnClick}>
                 Increase Font Size
-            </button> 
-        </>
+            </button>  */}
+        </FontSizeContainer>
     )
 };
+
+function UsersInfo({ usersLoadable, setCurrentUserID }) {
+    switch (usersLoadable.state) {
+        case 'hasValue':
+            return usersLoadable.contents.map((user) => (
+                <User 
+                    key={user.id} 
+                    userInfo={user} 
+                    handleUserClick={() => setCurrentUserID(user.id)}
+                />
+            ))
+        case 'loading':
+            return <h1>Loading...</h1>
+        case 'hasError':
+            throw usersLoadable.contents;
+    }
+}
 
 
 export default ToDoList;
