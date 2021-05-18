@@ -6,16 +6,21 @@ import reportWebVitals from './reportWebVitals';
 import { RecoilRoot } from 'recoil'
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorFallback from './components/ErrorFallback';
+import {
+  BrowserRouter as Router,
+} from "react-router-dom";
 
 ReactDOM.render(
   <React.StrictMode>
-    <RecoilRoot>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <Suspense fallback={<h1>Loading...</h1>}>
-          <App />
-        </Suspense>
-      </ErrorBoundary>
-    </RecoilRoot>
+    <Router>
+      <RecoilRoot>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <App />
+          </Suspense>
+        </ErrorBoundary>
+      </RecoilRoot>
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 );
