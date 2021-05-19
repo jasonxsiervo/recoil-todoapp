@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import axios from 'axios';
-import { Grid, View, Button } from '@adobe/react-spectrum';
+import { Grid, View, Button, SearchField } from '@adobe/react-spectrum';
 import { 
     useRecoilState, 
     useRecoilValue, 
@@ -9,11 +9,16 @@ import {
     useSetRecoilState,
     useRecoilCallback,
 } from 'recoil';
+import { useMediaQuery } from 'react-responsive';
 import styled from 'styled-components';
 import { fontSizeState, fontSizeLabelState } from './recoil/atom/FontSize';
 import { currentUserIDState, userList, userListQuery } from './recoil/atom/User';
 import { Fahrenheit, getCelsius } from './recoil/atom/Temperature';
 import { filteredToDoListState } from './recoil/selectors/FilteredToDo';
+import LeftPanel from './LeftPanel';
+import RightPanel from './RightPanel';
+import Post from './containers/Post';
+import Profile from './containers/Profile';
 import ToDoListFilters from './ToDoListFilters';
 import ToDoListStats from './ToDoListStats';
 import ToDoItem from './ToDoItem';
@@ -21,20 +26,12 @@ import ToDoItemCreator from './ToDoItemCreator';
 import User from './User';
 
 
-const ToDoListContainer = styled.div`
-    background: transparent;
-`;
 
-const FontSizeContainer = styled.div`
-    background: transparent;
-`;
+function MainPage() {
 
-const UserListContainer = styled.div`
-    background: transparent;
-`;
-
-
-function ToDoList() {
+    const is3Cols = useMediaQuery({ minWidth: 1300 });
+    const is2Cols = useMediaQuery({ minWidth: 1265 });
+    const is1Cols = useMediaQuery({ minWidth: 800 });
 
     const [ fontSize, setFontSize ] = useRecoilState(fontSizeState);
     const fontSizeLabel = useRecoilValue(fontSizeLabelState);
@@ -71,6 +68,7 @@ function ToDoList() {
         fetchData();
     }, [setListOfUsers]);
 
+
     const reloadList = useRecoilCallback(({snapshot}) => async () => {
         return await snapshot.getPromise(userList);
     })
@@ -82,161 +80,375 @@ function ToDoList() {
     const addTenF = () => {
         console.log('addTenF')
         setFahrenheit(fahrenheit + 10);
-    }
+    };
 
     const addTenC = () => {
         console.log('addTenC')
         setCelsius(celsius + 10);
-    }
-
+    };
 
     return (
-        <Grid
-            // areas={['header  header', 'sidebar content', 'footer  footer']}
-            areas={['header  header header', 'left-sidebar content right-sidebar']}
-            columns={['1fr', '3fr', '1fr']}
-            rows={['size-1000', 'auto']}
-            height={["size-6000"]}
-            gap="size-100"
-        >
-            
-            <View backgroundColor="gray-200" gridArea="header">
-                <FontSize 
-                    fontSize={fontSize} 
-                    fontSizeLabel={fontSizeLabel} 
-                    handleOnClick={handleOnClick} 
-                    resetSize={resetSize}
-                />    
-            </View>
-
-            <View backgroundColor="gray-200" gridArea="left-sidebar">
+        <View>
+        {
+            is3Cols ? 
                 <Grid
-                    columns={['1fr']}
-                    rows={['1fr', '1fr']}
+                    areas={['left-sidebar header right-sidebar', 'left-sidebar content right-sidebar']}
+                    columns={['2fr', 'minmax(600px, 5fr)', '2fr']}
+                    rows={['size-1000', 'auto']}
+                    height={["size-6000"]}
                     gap="size-100"
-                    margin="size-100"
+                    marginX="size-2000"
                 >
-                    <Button variant="secondary" isQuiet>
-                        To Do List
-                    </Button>
-                    <Button variant="secondary" isQuiet>
-                        Users
-                    </Button>
-                    <Button variant="secondary" isQuiet>
-                        Fahrenheit/Celsius
-                    </Button>
+                    
+                    <View gridArea="header">
+                        <Grid
+                            areas={['SearchBar']}
+                            columns={['1fr']}
+                            justifyItems="center"
+                        >
+                            <View marginY="size-300" gridArea="SearchBar">
+                                <SearchField
+                                    placeholder="Enter text"
+                                    width="size-6000"
+                                    style={{backgroundColor: '#4B4B4B' }}
+                                    // height="size-1000"
+                                />
+                            </View>
+                        </Grid>
+                    </View>
+
+                    <View gridArea="left-sidebar">
+                        <Grid
+                            areas={['Logo', 'Title', 'Status', 'Content']}
+                            columns={['1fr']}
+                            rows={['size-600', 'size-400', 'size-200', 'size-1000']}
+                            marginY="size-225"
+                        >
+                            <View gridArea="Logo">
+                                just some text
+                            </View>
+
+                            <View justifySelf="start" alignSelf="end" gridArea="Title">
+                                <p style={{marginBottom: '-30px', fontSize: 22}}><b>People</b></p>
+                            </View>
+
+                            <View gridArea="Status">
+                                <p style={{marginTop: '35px'}}>Online</p>
+                            </View>
+
+                            <View marginTop="size-400" gridArea="Content">
+                                <UsersInfo usersLoadable={usersLoadable} setCurrentUserID={setCurrentUserID}/>
+                            </View>
+                        </Grid>
+                    </View>
+
+                    <View gridArea="content">
+                        <Grid
+                            areas={['PageName ActionButton', 'Content Content']}
+                            columns={['5fr', 'size-1600']}
+                            rows={['size-400', 'auto']}
+                            rowGap="size-400"
+                            marginX="size-500"
+                        >
+                            <View justifySelf="start" alignSelf="end" gridArea="PageName">
+                                <p style={{marginBottom: '-5px', fontSize: 22}}><b>Your Feed</b></p>
+                            </View>
+
+                            <View justifySelf="end" alignSelf="end" gridArea="ActionButton">
+                                <Button variant="cta">
+                                    New room
+                                </Button>
+                            </View>
+
+                            <View gridArea="Content">
+                                <Post />
+                                <Post />
+                                <Post />
+                                <Post />
+                                <Post />
+                            </View>
+                        </Grid>
+                    </View>
+
+
+                    <View gridArea="right-sidebar">
+                        <Grid
+                            areas={['UserDP', 'Profile', 'ContentInfo']}
+                            columns={['1fr']}
+                            rows={['size-600', '2fr', '1fr']}
+                            rowGap="size-300"
+                            marginY="size-225"
+                        >
+                            <View gridArea="UserDP">
+
+                            </View>
+                            <View gridArea="Profile">
+                                <Profile />
+                            </View>
+
+                            <View gridArea="ContentInfo">
+                                <p>Content Info</p>
+                            </View>
+
+                        </Grid>
+                    </View>
                 </Grid>
-            </View>
-
-            <View backgroundColor="gray-200" gridArea="content">
-                {/* <h1>To-do List</h1>
-
-                <ToDoItemCreator />
-                <ToDoListFilters />
-                <ToDoListStats />
-
-                {
-                    toDoList[0].map((item) => (
-                    <ToDoItem key={item.id} item={item} />
-                    ))
-                } */}
-
-                {/* <h1>Temperature</h1>
-
-                <h2>{fahrenheit}°F is {celsius}°C</h2>
-
-                <Button variant="secondary" onPress={addTenC}>
-                    Add 10°C
-                </Button>
-                <Button variant="secondary" onPress={addTenF}>
-                    Add 10°F
-                </Button>
-                <Button variant="secondary" onPress={resetValues}>
-                    Reset
-                </Button> */}
-
-            { currentUser.length > 0 ? <h1>Welcome, {currentUser}</h1> : <h1>Welcome!</h1> }
-                <Button variant="secondary" onPress={reloadList}>
-                    🔃
-                </Button>
+            :
+            is2Cols ?
+            <Grid
+                areas={['left-sidebar header right-sidebar', 'left-sidebar content right-sidebar']}
+                columns={['2fr', 'minmax(600px, 5fr)', '2fr']}
+                rows={['size-1000', 'auto']}
+                height={["size-6000"]}
+                gap="size-100"
+                marginX="size-2000"
+            >
                 
-                <UsersInfo usersLoadable={usersLoadable} setCurrentUserID={setCurrentUserID}/>
-            </View>
+                <View gridArea="header">
+                    <Grid
+                        areas={['SearchBar']}
+                        columns={['1fr']}
+                        justifyItems="center"
+                    >
+                        <View marginY="size-300" gridArea="SearchBar">
+                            <SearchField
+                                placeholder="Enter text"
+                                width="size-6000"
+                                style={{backgroundColor: '#4B4B4B' }}
+                                // height="size-1000"
+                            />
+                        </View>
+                    </Grid>
+                </View>
+
+                <View gridArea="left-sidebar">
+                    <Grid
+                        areas={['Logo', 'Title', 'Status', 'Content']}
+                        columns={['1fr']}
+                        rows={['size-600', 'size-400', 'size-200', 'size-1000']}
+                        marginY="size-225"
+                    >
+                        <View gridArea="Logo">
+                            just some text
+                        </View>
+
+                        <View justifySelf="start" alignSelf="end" gridArea="Title">
+                            <p style={{marginBottom: '-30px', fontSize: 22}}><b>People</b></p>
+                        </View>
+
+                        <View gridArea="Status">
+                            <p style={{marginTop: '35px'}}>Online</p>
+                        </View>
+
+                        <View marginTop="size-400" gridArea="Content">
+                            <UsersInfo usersLoadable={usersLoadable} setCurrentUserID={setCurrentUserID}/>
+                        </View>
+                    </Grid>
+                </View>
+
+                <View gridArea="content">
+                    <Grid
+                        areas={['PageName ActionButton', 'Content Content']}
+                        columns={['5fr', 'size-1600']}
+                        rows={['size-400', 'auto']}
+                        rowGap="size-400"
+                        marginX="size-500"
+                    >
+                        <View justifySelf="start" alignSelf="end" gridArea="PageName">
+                            <p style={{marginBottom: '-5px', fontSize: 22}}><b>Your Feed</b></p>
+                        </View>
+
+                        <View justifySelf="end" alignSelf="end" gridArea="ActionButton">
+                            <Button variant="cta">
+                                New room
+                            </Button>
+                        </View>
+
+                        <View gridArea="Content">
+                            <Post />
+                            <Post />
+                            <Post />
+                            <Post />
+                            <Post />
+                        </View>
+                    </Grid>
+                </View>
 
 
-            <View backgroundColor="gray-200" gridArea="right-sidebar">
-                <Grid
-                    columns={['1fr']}
-                    rows={['1fr', '1fr']}
-                    gap="size-100"
-                    margin="size-100"
-                >
-                    <Button variant="secondary" isQuiet>
-                        To Do List
-                    </Button>
-                    <Button variant="secondary" isQuiet>
-                        Users
-                    </Button>
-                    <Button variant="secondary" isQuiet>
-                        Fahrenheit/Celsius
-                    </Button>
-                </Grid>
-            </View>
-        </Grid>
-        // <>
-        //     <ToDoListContainer>
-        //         <h1>To-do List</h1>
+                <View gridArea="right-sidebar">
+                    <Grid
+                        areas={['UserDP', 'Profile', 'ContentInfo']}
+                        columns={['1fr']}
+                        rows={['size-600', '2fr', '1fr']}
+                        rowGap="size-300"
+                        marginY="size-225"
+                    >
+                        <View gridArea="UserDP">
 
-        //         <ToDoItemCreator />
-        //         <ToDoListFilters />
-        //         <ToDoListStats />
+                        </View>
+                        <View gridArea="Profile">
+                            <Profile />
+                        </View>
 
-        //         {
-        //             toDoList[0].map((item) => (
-        //                 <ToDoItem key={item.id} item={item} />
-        //             ))
-        //         }
-        //     </ToDoListContainer>
+                        <View gridArea="ContentInfo">
+                            <p>Content Info</p>
+                        </View>
 
-        //     <FontSizeContainer>
-        //         <FontSize 
-        //             fontSize={fontSize} 
-        //             fontSizeLabel={fontSizeLabel} 
-        //             handleOnClick={handleOnClick} 
-        //             resetSize={resetSize}
-        //         />
-        //     </FontSizeContainer>
+                    </Grid>
+                </View>
+            </Grid>
+            : 
+            is1Cols ?
+            <Grid
+                areas={['left-sidebar header', 'left-sidebar content']}
+                columns={['2fr', 'minmax(600px, 5fr)']}
+                rows={['size-1000', 'auto']}
+                height={["size-6000"]}
+                gap="size-100"
+                marginX="size-2000"
+            >
+                
+                <View gridArea="header">
+                    <Grid
+                        areas={['SearchBar']}
+                        columns={['1fr']}
+                        justifyItems="center"
+                    >
+                        <View marginY="size-300" gridArea="SearchBar">
+                            <SearchField
+                                placeholder="Enter text"
+                                width="size-6000"
+                                style={{backgroundColor: '#4B4B4B' }}
+                                // height="size-1000"
+                            />
+                        </View>
+                    </Grid>
+                </View>
 
-        //     <UserListContainer>
-        //         <h1>{currentUser.length > 0 ? <h1>Welcome, {currentUser}</h1> : <h1>Welcome!</h1>}</h1>
-        //         {
-        //             users.length !== 0 ?
-        //             users.map((user) => (
-        //                 <User 
-        //                     key={user.id} 
-        //                     userInfo={user} 
-        //                     handleUserClick={() => setCurrentUserID(user.id)}
-        //                 />
-        //             ))
-        //             :
-        //             <p>Loading...</p>
-        //         }
-        //     </UserListContainer>
-            
-        // </>
+                <View gridArea="left-sidebar">
+                    <Grid
+                        areas={['Logo', 'Title', 'Status', 'Content']}
+                        columns={['1fr']}
+                        rows={['size-600', 'size-400', 'size-200', 'size-1000']}
+                        marginY="size-225"
+                    >
+                        <View gridArea="Logo">
+                            just some text
+                        </View>
+
+                        <View justifySelf="start" alignSelf="end" gridArea="Title">
+                            <p style={{marginBottom: '-30px', fontSize: 22}}><b>People</b></p>
+                        </View>
+
+                        <View gridArea="Status">
+                            <p style={{marginTop: '35px'}}>Online</p>
+                        </View>
+
+                        <View marginTop="size-400" gridArea="Content">
+                            <UsersInfo usersLoadable={usersLoadable} setCurrentUserID={setCurrentUserID}/>
+                        </View>
+                    </Grid>
+                </View>
+
+                <View gridArea="content">
+                    <Grid
+                        areas={['PageName ActionButton', 'Content Content']}
+                        columns={['5fr', 'size-1600']}
+                        rows={['size-400', 'auto']}
+                        rowGap="size-400"
+                        marginX="size-500"
+                    >
+                        <View justifySelf="start" alignSelf="end" gridArea="PageName">
+                            <p style={{marginBottom: '-5px', fontSize: 22}}><b>Your Feed</b></p>
+                        </View>
+
+                        <View justifySelf="end" alignSelf="end" gridArea="ActionButton">
+                            <Button variant="cta">
+                                New room
+                            </Button>
+                        </View>
+
+                        <View gridArea="Content">
+                            <Post />
+                            <Post />
+                            <Post />
+                            <Post />
+                            <Post />
+                        </View>
+                    </Grid>
+                </View>
+            </Grid>
+            :
+            <Grid
+                areas={['header', 'content']}
+                columns={['1fr']}
+                rows={['size-1000', 'auto']}
+                height={["size-6000"]}
+                gap="size-100"
+                marginX="size-200"
+            >
+                
+                <View gridArea="header">
+                    <Grid
+                        areas={['SearchBar']}
+                        columns={['1fr']}
+                        justifyItems="center"
+                    >
+                        <View marginY="size-300" gridArea="SearchBar">
+                            <SearchField
+                                placeholder="Enter text"
+                                // width='minmax(size-6000, 1fr)'
+                                width="size-5000"
+                                style={{backgroundColor: '#4B4B4B' }}
+                                // height="size-1000"
+                            />
+                        </View>
+                    </Grid>
+                </View>
+
+                <View gridArea="content">
+                    <Grid
+                        areas={['PageName ActionButton', 'Content Content']}
+                        columns={['5fr', 'size-1600']}
+                        rows={['size-400', 'auto']}
+                        rowGap="size-400"
+                        marginX="size-500"
+                    >
+                        <View justifySelf="start" alignSelf="end" gridArea="PageName">
+                            <p style={{marginBottom: '-5px', fontSize: 22}}><b>Your Feed</b></p>
+                        </View>
+
+                        <View justifySelf="end" alignSelf="end" gridArea="ActionButton">
+                            <Button variant="cta">
+                                New room
+                            </Button>
+                        </View>
+
+                        <View gridArea="Content">
+                            <Post />
+                            <Post />
+                            <Post />
+                            <Post />
+                            <Post />
+                        </View>
+                    </Grid>
+                </View>
+            </Grid>
+        }
+        </View>
     );
 }
 
 const FontSize = ({ fontSize, fontSizeLabel, handleOnClick, resetSize }) => {
     return (
-        <FontSizeContainer>
+        <>
             <h1 style={{fontSize, cursor: 'pointer', margin: 0}} onClick={handleOnClick}>To Do List component</h1>
             <p style={{ margin: 0}} onClick={resetSize}>({fontSizeLabel})</p>
 
             {/* <button onClick={handleOnClick}>
                 Increase Font Size
             </button>  */}
-        </FontSizeContainer>
+        </>
     )
 };
 
@@ -255,7 +467,7 @@ function UsersInfo({ usersLoadable, setCurrentUserID }) {
         case 'hasError':
             throw usersLoadable.contents;
     }
-}
+};
 
 
-export default ToDoList;
+export default MainPage;
